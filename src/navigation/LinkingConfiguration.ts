@@ -4,6 +4,11 @@ export default {
   prefixes: [Linking.makeUrl('/')],
   config: {
     screens: {
+      Login: {
+        screens: {
+          Login: 'login',
+        },
+      },
       Root: {
         screens: {
           TabOne: {
@@ -14,6 +19,11 @@ export default {
           TabTwo: {
             screens: {
               TabTwoScreen: 'two',
+            },
+          },
+          TabThree: {
+            screens: {
+              TabTwoScreen: 'three',
             },
           },
         },
