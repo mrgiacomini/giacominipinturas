@@ -14,7 +14,7 @@ api.interceptors.response.use(
 
 const errorHandler = (error) => {
   console.log(error);
-  if (error?.response?.status === 401) signout();
+  if (typeof error === 'string' && error?.indexOf('401') > 0 || error?.response?.status === 401) signout();
   
   return Promise.reject(error);
 }

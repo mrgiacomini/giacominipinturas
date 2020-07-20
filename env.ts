@@ -6,6 +6,7 @@ const localhost = "http://192.168.1.104:5000";
 const ENV = {
  dev: {
     apiUrl: localhost,
+    
  },
  staging: {
     apiUrl: 'https://giacominipinturas.herokuapp.com',

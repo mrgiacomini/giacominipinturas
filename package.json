@@ -53,6 +53,7 @@
     "@types/react-native": "~0.62.13",
     "babel-preset-expo": "~8.1.0",
     "jest-expo": "~38.0.0",
+    "metro-react-native-babel-preset": "^0.60.0",
     "typescript": "~3.9.5"
   },
   "private": true
