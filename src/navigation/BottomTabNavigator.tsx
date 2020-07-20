@@ -9,6 +9,7 @@ import Colors from '../constants/Colors';
 import TabOneScreen from '../screens/TabOneScreen';
 import TabTwoScreen from '../screens/TabTwoScreen';
 import TabThreeScreen from '../screens/TabThreeScreen';
+import Payments from '../screens/Payments';
 import { BottomTabParamList, TabOneParamList, TabTwoParamList, TabThreeParamList } from '../../types';
 import { Button } from 'react-native-paper';
 
@@ -93,6 +94,10 @@ function TabOneNavigator() {
       <TabOneStack.Screen
         name="EditaCliente"
         component={TabTwoScreen}
+      />
+      <TabOneStack.Screen
+        name="Pagamentos"
+        component={Payments}
       />
     </TabOneStack.Navigator>
   );

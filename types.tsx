@@ -13,6 +13,7 @@ export type BottomTabParamList = {
 export type TabOneParamList = {
   ListaClientes: undefined;
   EditaCliente: undefined;
+  Pagamentos: undefined;
 };
 
 export type TabTwoParamList = {

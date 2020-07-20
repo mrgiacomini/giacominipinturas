@@ -14,6 +14,7 @@ export default {
           TabOne: {
             screens: {
               TabOneScreen: 'one',
+              Payments: 'payments',
             },
           },
           TabTwo: {

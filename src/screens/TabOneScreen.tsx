@@ -1,73 +1,45 @@
 import React, {useEffect} from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View, TouchableOpacity, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, Text, View as ViewThemed } from '../components/Themed';
 import { Button } from 'react-native-paper';
 import Api from '../service/api';
+import Client from '../interfaces/Client';
+import { formatNumber } from '../helpers/utils';
 
-interface Client {
-  _id: string,
-  name: string,
-  phone: string,
-  email: string,
-  date: string,
-  location: string,
-  totalAmount: string,
-  description: string,
-  totalPayments: number
-}
-
-const data = {
-  _id: "5eee6dae8f766700179b656f",
-  date: "2020-06-20T20:10:01.927Z",
-  description: "Pintura completa portas verniz PU e textura e crepe na parte externa.",
-  email: "",
-  location: "Perto do equilíbrio",
-  name: "Airton e Célia",
-  phone: "+55 14 99648-4676",
-  quantityPayments: 2,
-  totalAmount: "20000.00",
-  totalPayments: 21500
-}
-
-function Item({data, navigation}) {
+function Item({data, navigation}: {data: Client, navigation: any}) {
   return (
     <ViewThemed style={styles.item}>
+      <TouchableOpacity onPress={() => navigation.navigate('Pagamentos', {data: data})}>
       <View style={styles.row}>
         <Text style={styles.itemTitle}>{data.name}</Text>
-        <Button onPress={navigation.navigate('EditaCliente', {action: 'edit'})} icon='pencil' style={styles.buttonEdit}>editar</Button>
+        <Button icon='pencil' style={styles.buttonEdit}
+          onPress={() => navigation.navigate('EditaCliente', {action: 'edit', data: data})}   
+        >editar
+        </Button>
       </View>
       <View style={styles.row}>
         <View style={styles.column}>
-          <Text style={styles.itemTotalAmount}>R$ {data.totalAmount}</Text>
-          <Text style={styles.itemAmountReceived}>R$ {data.totalPayments}</Text>
+          <Text style={styles.itemTotalAmount}>R$ {formatNumber(data.totalAmount)}</Text>
+          <Text style={styles.itemAmountReceived}>R$ {formatNumber(data.totalPayments)}</Text>
         </View>
-        <View style={styles.column}>
+        <View style={[styles.column, {alignItems: 'flex-end'}]}>
           <Text style={{color: '#999966'}}>a receber</Text>
-          <Text style={styles.itemAmountToReceive}>R$ {+data.totalAmount - +data.totalPayments}</Text>
+          <Text style={styles.itemAmountToReceive}>R$ {formatNumber(+data.totalAmount - +data.totalPayments)}</Text>
         </View>
       </View>
+      </TouchableOpacity>
     </ViewThemed>
   );
 }
 
-export default function TabOneScreen({navigation}: {navigation:any}) {
-  const [state, setState ] = React.useState({
-    clientList: [],
-    didGetClients: false
-  });
-
-  // useEffect(() => {
-  //   Api.get('clients').then(response => {
-  //     setState({clientList: response.data, didGetClients: true });
-  //   });
-  // },[]);
+export default function TabOneScreen({route, navigation}: {route:any, navigation:any}) {
+  const [clientList, setClientList ] = React.useState([]);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
-      Api.get('clients').then(response => {
-        setState({clientList: response.data, didGetClients: true });
-      });
+      getClients();
       return () => {
         // Do something when the screen is unfocused
         // Useful for cleanup functions
@@ -75,16 +47,30 @@ export default function TabOneScreen({navigation}: {navigation:any}) {
     }, [])
   );
 
+  const onRefresh = React.useCallback(() => {
+    getClients();
+  }, []);
+
+  function getClients() {  
+    setClientList([]);
+    setRefreshing(true);
+    Api.get('clients').then(response => {
+      setClientList(response.data);
+      setRefreshing(false);
+    }).catch(e => console.log(e));
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      { !!data ?
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          data={state.clientList}
-          renderItem={({item}) => <Item data={item} navigation={navigation}/>}
-          keyExtractor={item => item._id}
-        /> : null
-      }
+    <SafeAreaView style={styles.container}>      
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        data={clientList}
+        renderItem={({item}: {item: Client}) => <Item data={item} navigation={navigation}/>}
+        keyExtractor={item => item._id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      /> 
     </SafeAreaView>
   );
 }
@@ -92,7 +78,8 @@ export default function TabOneScreen({navigation}: {navigation:any}) {
 const styles = StyleSheet.create({  
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    height: 50
   },
   column: {
     flexDirection: 'column',
@@ -132,6 +119,6 @@ const styles = StyleSheet.create({
     color: '#999966'
   },
   buttonEdit: {
-    paddingRight: 0
+    marginRight:'-5%'
   }
 });

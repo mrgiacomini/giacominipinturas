@@ -28,3 +28,8 @@ export const signout = async () => {
     await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('user');
 };
+
+export const getToken = async () => {
+    const token = await AsyncStorage.getItem('token');
+    return token;
+};

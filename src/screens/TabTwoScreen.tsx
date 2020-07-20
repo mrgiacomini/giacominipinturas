@@ -1,25 +1,28 @@
-import React, {useState, useRef} from 'react';
-import { StyleSheet, TextInput, View, Alert } from 'react-native';
-import Colors from '../constants/Colors';
+import React, {useState} from 'react';
+import { StyleSheet, TextInput, View, Alert, Linking } from 'react-native';
 import { useAuth } from "../contexts/auth";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { TextInputMask } from 'react-native-masked-text'
 import { Text, View as ViewThemed } from '../components/Themed';
-import { RectButton, ScrollView } from "react-native-gesture-handler";
+import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import { Button } from 'react-native-paper';
-import { FontAwesome5 } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { format } from 'date-fns'
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import Api from '../service/api';
+import Client from '../interfaces/Client';
+import { formatDate } from '../helpers/utils';
+import Colors from '../constants/Colors';
 
 const dateFormat =  'dd/MM/yyyy';
 
-export default function TabTwoScreen({navigation}) {
+export default function TabTwoScreen({ route, navigation }) {
   const { user } = useAuth();
+  const isEdit = route.params?.action == 'edit';
+  const data = route.params?.data;
+
   var moneyField = {} as TextInputMask|null;
-  console.log(navigation)
-  const initialForm = {
+ 
+  var initialForm = {
     name: '',
     phone: '',
     email: '',
@@ -27,45 +30,84 @@ export default function TabTwoScreen({navigation}) {
     location: '',
     totalAmount: '',
     description: '',
-  };
+  } as Client;
 
-  const [formData, setFormData] = useState<any>(initialForm);
+  if (isEdit && !!data) {
+    data.date = formatDate(data.date);
+    initialForm = data;
+  }
 
+  const [formData, setFormData] = useState<Client>(initialForm);
+  
   const regexPhone = /^(\+?\d{0,4})?\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{4}\)?)?$/;
   const validationSchema = Yup.object().shape({
     name: Yup.string().required('Nome é obrigatório'),
     email: Yup.string().email('Email não foi preenchido corretamente'),
-    //phone: Yup.string().matches(regexPhone, 'Telefone não foi preenchido corretamente'),
+    date: Yup.string().min(9, 'Data inválida'),
+    phone: Yup.string().matches(regexPhone, 'Telefone não foi preenchido corretamente'),
     totalAmount: Yup.string().required('Valor total é obrigatório')
   });
   
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [datePicker, setDatePicker] = useState<Date>(new Date());
-
-  const onChangeDate = (selectedDate, setFieldValue) => {
-    setShowDatePicker(false);
-    const formatted = format(new Date(selectedDate), dateFormat);
-    setFieldValue('date', formatted, false);
-  };
-
-  function handleSubmit(form: any, {setSubmitting, resetForm}) {
-    form.userId = user.data.user._id;
-    form.totalAmount = moneyField.getRawValue();
-
-    Api.post('/addClient', form)
+  function handleSubmit(form: any, {setSubmitting, resetForm}:{setSubmitting: any, resetForm: any}) {
+    const dados = { ...form };
+    dados.userId = user.data.user._id;
+    dados.date = formatDate(form.date);
+    dados.totalAmount = moneyField?.getRawValue();
+   
+    if (isEdit) 
+      Api.put(`/updateClient/${form._id}`, dados)
         .then(res => {
             setSubmitting(false);  
-            if (!res.data.errors) {               
-              alert('sucesso');              
+            if (!res.data.errors) {                     
+              resetForm();  
+              navigation.navigate('ListaClientes');
+            } else {
+              alert('Aconteceu um erro ao salvar. Tente novamente.');                 
+              console.log(res.data.errors); 
+            }
+      });
+    else
+      Api.post('/addClient', dados)
+        .then(res => {
+            setSubmitting(false);  
+            if (!res.data.errors) {          
               resetForm();  
               navigation.navigate('Clientes');
             } else {
-              alert('erro');                
+              alert('Aconteceu um erro ao salvar. Tente novamente.');                
+              console.log(res.data.errors); 
+            }
+      });
+  }
+
+  function openDeleteConfirmation() {
+    Alert.alert(
+      "Excluir",
+      "Deseja realmente excluir?",
+      [
+        {
+          text: "Não",
+          onPress: () => {},
+          style: "cancel"
+        },
+        { text: "Sim", onPress: deleteClient }
+      ],
+      { cancelable: false }
+    );
+  }
+
+  function deleteClient() {    
+    Api.delete(`/deleteClient/${data._id}`)
+        .then(res => {
+            if (!res.data.errors) {   
+              navigation.navigate('ListaClientes');
+            } else {
+              alert('Aconteceu um erro ao excluir.');                
               console.log(res.data.errors); 
             }
     });
   }
-
+ 
   function countLines(value:string) {
     var count = 1;
     if (!!value)
@@ -75,53 +117,70 @@ export default function TabTwoScreen({navigation}) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastro</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>{ isEdit ? 'Editar' : 'Cadastro'}</Text>
+        { isEdit && <FontAwesome5 onPress={openDeleteConfirmation} size={25} name="trash-alt" style={{color: 'red'}}/> }
+      </View>
+      
       <ViewThemed style={styles.separator} lightColor="rgba(0,0,0,0.2)" />
+      
       <ScrollView contentContainerStyle={{justifyContent: 'center'}} style={styles.form} showsVerticalScrollIndicator={false}>
-      <Formik
-        enableReinitialize
-        initialValues={formData}
-        validationSchema={validationSchema}
-        onSubmit={(formData, {setSubmitting, resetForm}) => handleSubmit(formData, {setSubmitting, resetForm})}
-      >
-        {({ handleChange, handleBlur, handleSubmit, setFieldValue, setSubmitting, resetForm, values, errors, touched, isValid, isSubmitting }) => (
-          <View>
-            <TextInput
-              placeholder={'Nome'}
-              onChangeText={handleChange('name')}
-              onBlur={handleBlur('name')}
-              value={values.name}
-              style={styles.input}
-              autoCompleteType={"name"}
-            />
-            { (errors.name && touched.name) && 
-              <Text style={styles.helperText}>{errors.name}</Text>
-            }
-            <TextInput
-              placeholder={'Email'}
-              onChangeText={handleChange('email')}
-              onBlur={handleBlur('email')}
-              value={values.email}
-              style={styles.input}
-              autoCompleteType={"email"}
-              keyboardType={"email-address"}
-            />
-            { (errors.email && touched.email) && 
-              <Text style={styles.helperText}>{errors.email}</Text>
-            }
-            <TextInput
-              placeholder={'Telefone'}
-              onChangeText={handleChange('phone')}
-              onBlur={handleBlur('phone')}
-              value={values.phone}
-              style={styles.input}
-              autoCompleteType={"tel"}
-              keyboardType={"phone-pad"}                      
-            />
-            { (errors.phone && touched.phone) && 
-              <Text style={styles.helperText}>{errors.phone}</Text>
-            }
-            <View style={styles.input}>              
+        <Formik
+          enableReinitialize
+          initialValues={formData}
+          validationSchema={validationSchema}
+          onSubmit={(formData, {setSubmitting, resetForm}) => handleSubmit(formData, {setSubmitting, resetForm})}
+        >
+          {({ handleChange, handleBlur, handleSubmit, setFieldValue, setSubmitting, resetForm, values, errors, touched, isValid, isSubmitting }) => (
+            <View>
+              <TextInput
+                placeholder={'Nome'}
+                onChangeText={handleChange('name')}
+                onBlur={handleBlur('name')}
+                value={values.name}
+                style={styles.input}
+                autoCompleteType={"name"}
+              />
+              { (errors.name && touched.name) && 
+                <Text style={styles.helperText}>{errors.name}</Text>
+              }
+              <TextInput
+                placeholder={'Email'}
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                value={values.email}
+                style={styles.input}
+                autoCompleteType={"email"}
+                keyboardType={"email-address"}
+              />
+              { (errors.email && touched.email) && 
+                <Text style={styles.helperText}>{errors.email}</Text>
+              }
+              <View style={styles.input}>
+                <TextInput
+                  placeholder={'Telefone'}
+                  onChangeText={handleChange('phone')}
+                  onBlur={handleBlur('phone')}
+                  value={values.phone}
+                  style={{width: '80%', fontSize: 18}}
+                  autoCompleteType={"tel"}
+                  keyboardType={"phone-pad"}                      
+                />
+                { !!values.phone &&
+                  <View style={styles.inputIcons}>
+                    <TouchableOpacity onPress={()=>Linking.openURL(`tel://${values.phone}`)}>
+                      <MaterialIcons  name="phone-forwarded" size={20} color={Colors['light'].tint}/>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={()=>Linking.openURL(`whatsapp://send?phone=+55${values.phone}`)} >
+                      <FontAwesome5 name="whatsapp-square" size={25} color='rgb(7,188,76)'/>
+                    </TouchableOpacity>
+                  </View>
+                }
+              </View>
+              
+              { (errors.phone && touched.phone) && 
+                <Text style={styles.helperText}>{errors.phone}</Text>
+              }
               <TextInputMask
                 type={'datetime'}
                 options={{ format: dateFormat}}
@@ -129,71 +188,62 @@ export default function TabTwoScreen({navigation}) {
                 value={values.date}
                 onChangeText={handleChange('date')}
                 onBlur={handleBlur('date')}
-                style={{fontSize: 18}}
+                style={styles.input}
+              />                
+              { (errors.date && touched.date) && 
+                <Text style={styles.helperText}>{errors.date}</Text>
+              }              
+              <TextInput 
+                placeholder={'Localização'}
+                value={values.location}
+                onChangeText={handleChange('location')}
+                onBlur={handleBlur('location')}
+                style={styles.input}
+              />   
+              { (errors.location && touched.location) && 
+                <Text style={styles.helperText}>{errors.location}</Text>
+              }
+              <TextInput 
+                placeholder={'Descrição'}
+                value={values.description}
+                onChangeText={handleChange('description')}
+                onBlur={handleBlur('description')}
+                style={styles.input}
+                multiline={true}
+                numberOfLines={countLines(values.description)}
               />
-              <FontAwesome5 onPress={()=>setShowDatePicker(true)} size={25} name="calendar-alt" />
-            </View>
-            {showDatePicker && (
-              <DateTimePicker
-                testID="dateTimePicker"
-                value={datePicker}
-                mode={'date'}
-                display="default"
-                onChange={(event, selectedDate) => onChangeDate(selectedDate, setFieldValue)}
+              <TextInputMask
+                ref={ref => moneyField = ref}
+                type={'money'}
+                placeholder={'Valor Total'}
+                value={values.totalAmount}
+                onChangeText={handleChange('totalAmount')}
+                onBlur={handleBlur('totalAmount')}
+                style={styles.input}
+                options={{unit: 'R$ '}}
               />
-            )}
+              { (errors.totalAmount && touched.totalAmount) && 
+                <Text style={styles.helperText}>{errors.totalAmount}</Text>
+              }
 
-            <TextInput 
-              placeholder={'Localização'}
-              value={values.location}
-              onChangeText={handleChange('location')}
-              onBlur={handleBlur('location')}
-              style={styles.input}
-            />   
-            { (errors.location && touched.location) && 
-              <Text style={styles.helperText}>{errors.location}</Text>
-            }
-            <TextInput 
-              placeholder={'Descrição'}
-              value={values.description}
-              onChangeText={handleChange('description')}
-              onBlur={handleBlur('description')}
-              style={styles.input}
-              multiline={true}
-              numberOfLines={countLines(values.description)}
-            />
-            <TextInputMask
-              ref={ref => moneyField = ref}
-              type={'money'}
-              placeholder={'Valor Total'}
-              value={values.totalAmount}
-              onChangeText={handleChange('totalAmount')}
-              onBlur={handleBlur('totalAmount')}
-              style={styles.input}
-              options={{unit: 'R$ '}}
-            />
-            { (errors.totalAmount && touched.totalAmount) && 
-              <Text style={styles.helperText}>{errors.totalAmount}</Text>
-            }
-
-            <View style={styles.actions}>
-              <Button mode="outlined"
-                onPress={resetForm} 
-                contentStyle={styles.button}
-              >
-                LIMPAR
-              </Button>
-              <Button mode="contained"
-                onPress={handleSubmit} 
-                disabled={!isValid || isSubmitting} 
-                contentStyle={styles.button}
-              >
-                SALVAR
-              </Button>
+              <View style={styles.actions}>
+                <Button mode="outlined"
+                  onPress={resetForm} 
+                  contentStyle={styles.button}
+                >
+                  LIMPAR
+                </Button>
+                <Button mode="contained"
+                  onPress={handleSubmit} 
+                  disabled={!isValid || isSubmitting} 
+                  contentStyle={styles.button}
+                >
+                  SALVAR
+                </Button>
+              </View>
             </View>
-          </View>
-        )}
-      </Formik>
+          )}
+        </Formik>
       </ScrollView>
     </View>
   );
@@ -205,9 +255,16 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
+  header: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'center'
+  },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
+    width: '70%',
+    textAlign: 'center'
   },
   separator: {
     marginTop: 10,
@@ -243,4 +300,10 @@ const styles = StyleSheet.create({
     height: 50,
     width: 150,
   },
+  inputIcons: {
+    width: '20%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  }
 });
