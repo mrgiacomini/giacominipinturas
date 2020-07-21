@@ -1,11 +1,11 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import { FlatList, StyleSheet, View, TouchableOpacity, RefreshControl } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, Text, View as ViewThemed } from '../components/Themed';
 import { Button } from 'react-native-paper';
-import Api from '../service/api';
 import Client from '../interfaces/Client';
 import { formatNumber } from '../helpers/utils';
+import { useFetch } from '../hooks/useFetch';
+import { mutate as mutateGlobal } from 'swr';
 
 function Item({data, navigation}: {data: Client, navigation: any}) {
   return (
@@ -34,46 +34,26 @@ function Item({data, navigation}: {data: Client, navigation: any}) {
 }
 
 export default function TabOneScreen({route, navigation}: {route:any, navigation:any}) {
-  const [clientList, setClientList ] = React.useState([]);
-  const [refreshing, setRefreshing] = React.useState(false);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      getClients();
-      return () => {
-        // Do something when the screen is unfocused
-        // Useful for cleanup functions
-      };
-    }, [])
-  );
-
+  const { data, error, isValidating } = useFetch('clients');
+  
   const onRefresh = React.useCallback(() => {
-    getClients();
+    mutateGlobal('clients');
   }, []);
-
-  function getClients() {  
-    setClientList([]);
-    setRefreshing(true);
-    Api.get('clients').then(response => {
-      setClientList(response.data);
-      setRefreshing(false);
-    }).catch(e => console.log(e));
-  }
-
+  
   return (
     <SafeAreaView style={styles.container}>      
       <FlatList
         showsVerticalScrollIndicator={false}
-        data={clientList}
+        data={data}
         renderItem={({item}: {item: Client}) => <Item data={item} navigation={navigation}/>}
         keyExtractor={item => item._id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={isValidating} onRefresh={onRefresh} />
         }
       /> 
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({  
   row: {

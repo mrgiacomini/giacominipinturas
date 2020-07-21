@@ -12,10 +12,11 @@ import Api from '../service/api';
 import Client from '../interfaces/Client';
 import { formatDate } from '../helpers/utils';
 import Colors from '../constants/Colors';
+import { mutate as mutateGlobal } from 'swr';
 
 const dateFormat =  'dd/MM/yyyy';
 
-export default function TabTwoScreen({ route, navigation }) {
+export default function TabTwoScreen({route, navigation}: {route:any, navigation:any}) {
   const { user } = useAuth();
   const isEdit = route.params?.action == 'edit';
   const data = route.params?.data;
@@ -60,6 +61,7 @@ export default function TabTwoScreen({ route, navigation }) {
             setSubmitting(false);  
             if (!res.data.errors) {                     
               resetForm();  
+              mutateGlobal('clients');
               navigation.navigate('ListaClientes');
             } else {
               alert('Aconteceu um erro ao salvar. Tente novamente.');                 
@@ -73,6 +75,7 @@ export default function TabTwoScreen({ route, navigation }) {
             if (!res.data.errors) {          
               resetForm();  
               navigation.navigate('Clientes');
+              mutateGlobal('clients');
             } else {
               alert('Aconteceu um erro ao salvar. Tente novamente.');                
               console.log(res.data.errors); 

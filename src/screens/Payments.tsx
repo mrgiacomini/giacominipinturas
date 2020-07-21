@@ -12,7 +12,7 @@ import Api from '../service/api';
 import Payment from '../interfaces/Payment';
 import Client from '../interfaces/Client';
 import { formatDate, formatNumber, dayOfWeek } from '../helpers/utils';
-import {Collapse,CollapseHeader, CollapseBody, AccordionList} from 'accordion-collapse-react-native';
+import {Collapse,CollapseHeader, CollapseBody} from 'accordion-collapse-react-native';
 
 const dateFormat =  'dd/MM/yyyy';
 
