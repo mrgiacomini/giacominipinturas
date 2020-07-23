@@ -34,11 +34,12 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
   } as Client;
 
   if (isEdit && !!data) {
+    var aux = {...data};
     if (data.date?.indexOf('-') > 0)
-      data.date =  formatDate(data.date);
+      aux.date =  formatDate(aux.date);
 
-    data.totalAmount =  formatNumber(data.totalAmount);
-    initialForm = data;
+    aux.totalAmount = formatNumber(aux.totalAmount);
+    initialForm = aux;
   }
 
   const [formData, setFormData] = useState<Client>(initialForm);
@@ -48,7 +49,7 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
     name: Yup.string().required('Nome é obrigatório'),
     email: Yup.string().email('Email não foi preenchido corretamente'),
     date: Yup.string().min(9, 'Data inválida').nullable(),
-    phone: Yup.string().matches(regexPhone, 'Telefone não foi preenchido corretamente'),
+   // phone: Yup.string().matches(regexPhone, 'Telefone não foi preenchido corretamente'),
     totalAmount: Yup.string().required('Valor total é obrigatório')
   });
   
