@@ -63,7 +63,7 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
             if (!res.data.errors) {                     
               resetForm();  
               mutateGlobal('clients');
-              navigation.navigate('Clientes');
+              navigation.navigate('ListaClientes');
             } else {
               alert('Aconteceu um erro ao salvar. Tente novamente.');                 
               console.log(res.data.errors); 
@@ -75,7 +75,7 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
             setSubmitting(false);  
             if (!res.data.errors) {          
               resetForm();  
-              navigation.navigate('Clientes');
+              navigation.navigate('ListaClientes');
               mutateGlobal('clients');
             } else {
               alert('Aconteceu um erro ao salvar. Tente novamente.');                
