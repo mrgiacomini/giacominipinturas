@@ -7,10 +7,10 @@ import { TextInputMask } from 'react-native-masked-text'
 import { Text, View as ViewThemed } from '../components/Themed';
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import { Button } from 'react-native-paper';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import Api from '../service/api';
 import Client from '../interfaces/Client';
-import { formatDate, countLines, setToday } from '../helpers/utils';
+import { formatDate, formatNumber, countLines, setToday } from '../helpers/utils';
 import Colors from '../constants/Colors';
 import { mutate as mutateGlobal } from 'swr';
 
@@ -36,6 +36,8 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
   if (isEdit && !!data) {
     if (data.date?.indexOf('-') > 0)
       data.date =  formatDate(data.date);
+
+    data.totalAmount =  formatNumber(data.totalAmount);
     initialForm = data;
   }
 
@@ -45,7 +47,7 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
   const validationSchema = Yup.object().shape({
     name: Yup.string().required('Nome é obrigatório'),
     email: Yup.string().email('Email não foi preenchido corretamente'),
-    date: Yup.string().min(9, 'Data inválida'),
+    date: Yup.string().min(9, 'Data inválida').nullable(),
     phone: Yup.string().matches(regexPhone, 'Telefone não foi preenchido corretamente'),
     totalAmount: Yup.string().required('Valor total é obrigatório')
   });
@@ -75,8 +77,8 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
             setSubmitting(false);  
             if (!res.data.errors) {          
               resetForm();  
-              navigation.navigate('ListaClientes');
               mutateGlobal('clients');
+              navigation.navigate('ListaClientes');
             } else {
               alert('Aconteceu um erro ao salvar. Tente novamente.');                
               console.log(res.data.errors); 
@@ -100,6 +102,22 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
     );
   }
 
+  function openCompletedConfirmation() {
+    Alert.alert(
+      "Obra entregue",
+      "Deseja marcar como obra entregue?",
+      [
+        {
+          text: "Não",
+          onPress: ()=> completeClient(false),
+          style: "cancel"
+        },
+        { text: "Sim", onPress: ()=> completeClient(true) }
+      ],
+      { cancelable: true }
+    );
+  }
+
   function deleteClient() {    
     Api.delete(`/deleteClient/${data._id}`)
         .then(res => {
@@ -112,12 +130,23 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
             }
     });
   }
+
+  function completeClient(completed: boolean) {    
+    setFormData({...formData, completed: completed});
+  }
  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{ isEdit ? 'Editar' : 'Cadastro'}</Text>
-        { isEdit && <FontAwesome5 onPress={openDeleteConfirmation} size={25} name="trash-alt" style={{color: 'red'}}/> }
+        { isEdit && (
+          <>         
+          <FontAwesome onPress={openCompletedConfirmation} size={25} name="check-square-o" style={{color: formData.completed ? 'green' : 'black'}}/>  
+          <FontAwesome5 onPress={openDeleteConfirmation} size={25} name="trash-alt" style={{color: 'red', marginLeft: 20}}/> 
+          </>
+          )         
+        }
+     
       </View>
       
       <ViewThemed style={styles.separator} lightColor="rgba(0,0,0,0.2)" />
@@ -191,7 +220,7 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
                 />    
                 <View style={styles.inputIcons}>
                   {/* <MaterialIcons  name="today" size={30} onPress={()=>setToday('date', setFieldValue)}/>  */}
-                  <Button style={{width: 100, marginLeft: -10}} mode="text"
+                  <Button style={{width: 100, marginLeft: -20}} mode="text"
                       onPress={() => setToday('date', setFieldValue)}   
                       hitSlop={{ top: 20, bottom: 20, left: 50, right: 50 }}
                     >hoje

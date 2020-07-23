@@ -8,5 +8,6 @@ export default interface Client {
   totalAmount: string,
   description: string,
   totalPayments: number,
-  quantityPayments: number
+  quantityPayments: number,
+  completed: boolean
 };

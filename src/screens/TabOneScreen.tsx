@@ -1,15 +1,17 @@
 import React from 'react';
-import { FlatList, StyleSheet, View, TouchableOpacity, RefreshControl } from 'react-native';
+import { FlatList, StyleSheet, View, TouchableOpacity, RefreshControl, ImageBackground } from 'react-native';
 import { SafeAreaView, Text, View as ViewThemed } from '../components/Themed';
 import { Button } from 'react-native-paper';
 import Client from '../interfaces/Client';
 import { formatNumber } from '../helpers/utils';
 import { useFetch } from '../hooks/useFetch';
 import { mutate as mutateGlobal } from 'swr';
+import carimbo from '../../assets/images/carimbo-entregue.png';
 
 function Item({data, navigation}: {data: Client, navigation: any}) {
   return (
     <ViewThemed style={styles.item}>
+      <ImageBackground source={data.completed ? carimbo : null} imageStyle={styles.imageBackground} style={styles.background}>
       <TouchableOpacity onPress={() => navigation.navigate('Pagamentos', {data: data})}>
       <View style={styles.row}>
         <View style={[styles.column, {width: '70%'}]}>
@@ -37,6 +39,7 @@ function Item({data, navigation}: {data: Client, navigation: any}) {
         </View>
       </View>
       </TouchableOpacity>
+      </ImageBackground>
     </ViewThemed>
   );
 }
@@ -105,5 +108,14 @@ const styles = StyleSheet.create({
   },
   buttonEdit: {
     marginRight:'-5%'
+  },
+  imageBackground: {
+    margin: '5%',
+    width: '90%',
+    resizeMode: "contain",
+    opacity:0.5
+  },
+  background: {
+    flex: 1,
   }
 });

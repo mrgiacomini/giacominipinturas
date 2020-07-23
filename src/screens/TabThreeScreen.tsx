@@ -8,6 +8,7 @@ export default function TabThreeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Acessar Nota Fiscal</Text>
       <View style={styles.separator} lightColor="rgba(0,0,0,0.2)" />
+      <Text>Em desenvolvimento</Text>
     </View>
   );
 }
