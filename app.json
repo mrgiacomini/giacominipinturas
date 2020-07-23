@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "giacominipinturas",
+    "name": "Giacomini Pinturas",
     "slug": "giacominipinturas",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo_crop.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,10 +19,19 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.giacominipinturas.giacominipinturas",
+      "buildNumber": "1.0.0"
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo_crop.png"
+    },
+    "android": {
+      "package": "com.giacominipinturas.giacominipinturas",
+      "versionCode": 1
+    },
+    "extra": {
+      "url": "http://192.168.1.104:5000"
     }
   }
 }

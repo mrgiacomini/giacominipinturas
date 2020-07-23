@@ -13,29 +13,34 @@ import Payment from '../interfaces/Payment';
 import Client from '../interfaces/Client';
 import { formatDate, formatNumber, dayOfWeek } from '../helpers/utils';
 import {Collapse,CollapseHeader, CollapseBody} from 'accordion-collapse-react-native';
+import { mutate as mutateGlobal } from 'swr';
 
 const dateFormat =  'dd/MM/yyyy';
 
 export default function Payments({ route, navigation }: {route:any, navigation:any}) {
   const { user } = useAuth();
-  const data = route.params?.data as Client;
+  //const data = route.params?.data as Client;
+  const [client, setClient] = useState<Client>(route.params?.data);
 
   var moneyField = {} as TextInputMask|null;
  
   var initialForm = {
     date: formatDate(format(new Date(), 'yyyy-MM-dd')),
     amount: '',
-    clientId: data._id
+    clientId: client._id
   } as Payment;
 
   const [formData, setFormData] = useState<Payment>(initialForm);
-  const [paymentList, setPaymentList] = React.useState([]);
+  const [paymentList, setPaymentList] = React.useState<Payment[]>([]);
   const [collapsed, setCollapsed] = React.useState<boolean>(false);
 
-  const getPayments = () => {
-    Api.post('payments', {clientId: data?._id}).then(response => {
-        setPaymentList(response.data);
-        if (response.data && response.data.length == 0 ) setCollapsed(true);
+  const getPayments = (updateTotalPayments = false) => {
+    Api.post('payments', {clientId: client?._id}).then(response => {
+        setPaymentList(response.data);        
+        if (updateTotalPayments) 
+          updateTotal(response.data);
+        if (response.data && response.data.length == 0 ) 
+          setCollapsed(true);
     });
   };
 
@@ -58,9 +63,10 @@ export default function Payments({ route, navigation }: {route:any, navigation:a
         .then(res => {
             setSubmitting(false);  
             if (!res.data.errors) {         
-              getPayments();
+              getPayments(true);
               Keyboard.dismiss();    
               resetForm();  
+              mutateGlobal('clients');
             } else {
               alert('Aconteceu um erro ao salvar. Tente novamente.');                
               console.log(res.data.errors); 
@@ -81,27 +87,30 @@ export default function Payments({ route, navigation }: {route:any, navigation:a
     );
   }
 
-  function deletePayment(item:Payment) {   
-    console.log(item) 
+  function deletePayment(item:Payment) {  
     if (!!item) {
       Api.delete(`/deletePayment/${item._id}`)
           .then(res => {
-            console.log(res)
-              if (!res.data?.errors) {   
-                getPayments();
-              } else {
-                alert('Aconteceu um erro ao excluir. Tente novamente.');                
-                console.log(res.data.errors); 
-              }
+            if (!res.data?.errors) {   
+              getPayments(true);
+              mutateGlobal('clients');
+            } else {
+              alert('Aconteceu um erro ao excluir. Tente novamente.');                
+              console.log(res.data.errors); 
+            }
       });
     }
+  }
+
+  function updateTotal(list:Payment[]) {
+    setClient({...client, totalPayments: list.reduce((accumulator, current) => +accumulator + +current.amount, 0)});
   }
 
   return (
     <View style={styles.container}>     
 
       <View style={styles.header}>
-        <Text style={styles.title}>{'Pagamentos de '+data?.name}</Text>  
+        <Text style={styles.title}>{'Pagamentos de '+client?.name}</Text>  
       </View>
 
       <ViewThemed style={styles.separator} lightColor="rgba(0,0,0,0.2)" />
@@ -175,7 +184,7 @@ export default function Payments({ route, navigation }: {route:any, navigation:a
       </View>
       
       <View style={styles.details}>
-        <Text style={{fontSize: 16}}>{paymentList.length+" pagamentos"}  -  R$ {formatNumber(data?.totalPayments)}</Text>        
+        <Text style={{fontSize: 16}}>{paymentList.length} {paymentList.length === 1 ? "pagamento" :  "pagamentos"}  -  R$ {formatNumber(client?.totalPayments)}</Text>        
       </View>
      
       <SafeAreaView style={styles.list}>

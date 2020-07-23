@@ -1,10 +1,11 @@
 import { StackScreenProps } from '@react-navigation/stack';
 import * as React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { useAuth } from "../contexts/auth";
 import { RootStackParamList } from '../../types';
 import * as Facebook from 'expo-facebook';
 import LoginService from '../service/auth';
+import logo from '../../assets/images/logo.png'; 
 
 export default function Login({navigation}: StackScreenProps<RootStackParamList, 'Login'>) {
 
@@ -41,6 +42,10 @@ export default function Login({navigation}: StackScreenProps<RootStackParamList,
     
   return (
     <View style={styles.container}>
+      <Image
+        style={{ width: '100%', height: 200, marginBottom: 20 }}
+        source={logo}
+      />
       <Text style={styles.title}>GIACOMINI PINTURAS</Text>
       <TouchableOpacity onPress={handleSign} style={styles.loginBtn}>
         <Text style={{ color: "#fff" }}>ENTRAR COM O FACEBOOK</Text>

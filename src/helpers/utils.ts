@@ -42,4 +42,15 @@ export const formatNumber = (amount, decimalCount = 2, decimal = ",", thousands 
 
 export const dayOfWeek = (day) => {
     return days[day];
-}
+};
+
+export function countLines(value:string) {
+  var count = 1;
+  if (!!value)
+      count = value.split("\n").length;
+  return count > 1 ? count : 2;
+};  
+
+export function setToday(input: string, setFieldValue:any) {
+  setFieldValue(input, formatDate(new Date().toISOString()));
+};

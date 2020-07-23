@@ -10,7 +10,7 @@ import { Button } from 'react-native-paper';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import Api from '../service/api';
 import Client from '../interfaces/Client';
-import { formatDate } from '../helpers/utils';
+import { formatDate, countLines, setToday } from '../helpers/utils';
 import Colors from '../constants/Colors';
 import { mutate as mutateGlobal } from 'swr';
 
@@ -34,7 +34,8 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
   } as Client;
 
   if (isEdit && !!data) {
-    data.date = formatDate(data.date);
+    if (data.date?.indexOf('-') > 0)
+      data.date =  formatDate(data.date);
     initialForm = data;
   }
 
@@ -62,7 +63,7 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
             if (!res.data.errors) {                     
               resetForm();  
               mutateGlobal('clients');
-              navigation.navigate('ListaClientes');
+              navigation.navigate('Clientes');
             } else {
               alert('Aconteceu um erro ao salvar. Tente novamente.');                 
               console.log(res.data.errors); 
@@ -104,6 +105,7 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
         .then(res => {
             if (!res.data.errors) {   
               navigation.navigate('ListaClientes');
+              mutateGlobal('clients');
             } else {
               alert('Aconteceu um erro ao excluir.');                
               console.log(res.data.errors); 
@@ -111,13 +113,6 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
     });
   }
  
-  function countLines(value:string) {
-    var count = 1;
-    if (!!value)
-        count = value.split("\n").length;
-    return count > 1 ? count : 2;
-  };  
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -184,15 +179,25 @@ export default function TabTwoScreen({route, navigation}: {route:any, navigation
               { (errors.phone && touched.phone) && 
                 <Text style={styles.helperText}>{errors.phone}</Text>
               }
-              <TextInputMask
-                type={'datetime'}
-                options={{ format: dateFormat}}
-                placeholder={'Data de início'}
-                value={values.date}
-                onChangeText={handleChange('date')}
-                onBlur={handleBlur('date')}
-                style={styles.input}
-              />                
+              <View style={styles.input}>
+                <TextInputMask
+                  type={'datetime'}
+                  options={{ format: dateFormat}}
+                  placeholder={'Data de início'}
+                  value={values.date}
+                  onChangeText={handleChange('date')}
+                  onBlur={handleBlur('date')}
+                  style={{width: '70%', fontSize: 18}}
+                />    
+                <View style={styles.inputIcons}>
+                  {/* <MaterialIcons  name="today" size={30} onPress={()=>setToday('date', setFieldValue)}/>  */}
+                  <Button style={{width: 100, marginLeft: -10}} mode="text"
+                      onPress={() => setToday('date', setFieldValue)}   
+                      hitSlop={{ top: 20, bottom: 20, left: 50, right: 50 }}
+                    >hoje
+                  </Button>
+                </View>
+              </View>           
               { (errors.date && touched.date) && 
                 <Text style={styles.helperText}>{errors.date}</Text>
               }              

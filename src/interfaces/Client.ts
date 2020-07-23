@@ -7,5 +7,6 @@ export default interface Client {
   location: string,
   totalAmount: string,
   description: string,
-  totalPayments: number
+  totalPayments: number,
+  quantityPayments: number
 };

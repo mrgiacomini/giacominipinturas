@@ -12,19 +12,27 @@ function Item({data, navigation}: {data: Client, navigation: any}) {
     <ViewThemed style={styles.item}>
       <TouchableOpacity onPress={() => navigation.navigate('Pagamentos', {data: data})}>
       <View style={styles.row}>
-        <Text style={styles.itemTitle}>{data.name}</Text>
-        <Button icon='pencil' style={styles.buttonEdit}
-          onPress={() => navigation.navigate('EditaCliente', {action: 'edit', data: data})}   
-        >editar
-        </Button>
-      </View>
-      <View style={styles.row}>
+        <View style={[styles.column, {width: '70%'}]}>
+          <Text style={styles.itemTitle}>{data.name}</Text>
+        </View>
         <View style={styles.column}>
+          <Button icon='pencil' style={styles.buttonEdit} 
+              onPress={() => navigation.navigate('EditaCliente', {action: 'edit', data: data})}   
+              hitSlop={{ top: 20, bottom: 20, left: 50, right: 50 }}
+            >editar
+          </Button>
+        </View>
+      </View>
+    
+      <View style={[styles.row, {marginTop: 10}]}>
+        <View style={styles.column}>
+          <Text style={styles.itemTotalAmount}>TOTAL</Text>
+          <Text style={styles.itemAmountReceived}>{data.quantityPayments} {data.quantityPayments === 1 ? "pagamento" :  "pagamentos"}</Text>          
+          <Text style={[styles.itemTotalAmount, {color: '#999966'}]}>a receber</Text>
+        </View>
+        <View style={[styles.column, {alignItems: 'flex-start'}]}>
           <Text style={styles.itemTotalAmount}>R$ {formatNumber(data.totalAmount)}</Text>
           <Text style={styles.itemAmountReceived}>R$ {formatNumber(data.totalPayments)}</Text>
-        </View>
-        <View style={[styles.column, {alignItems: 'flex-end'}]}>
-          <Text style={{color: '#999966'}}>a receber</Text>
           <Text style={styles.itemAmountToReceive}>R$ {formatNumber(+data.totalAmount - +data.totalPayments)}</Text>
         </View>
       </View>
@@ -59,7 +67,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    height: 50
+    minHeight: 50
   },
   column: {
     flexDirection: 'column',
@@ -75,17 +83,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   item: {
-    height: 150,
+    minHeight: 180,
     backgroundColor: '#fff',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
     marginVertical: 4,
     flexDirection: 'column',
     justifyContent: 'space-between'
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
   },
   itemTotalAmount: {
     fontSize: 18

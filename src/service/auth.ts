@@ -1,10 +1,11 @@
 import axios from 'axios';
 import getEnvVars from '../../env';
-const { apiUrl } = getEnvVars();
+//const { apiUrl } = getEnvVars();
+import Constants from 'expo-constants';
 
 class LoginService {
     login(facebookData) {
-        return axios.post(apiUrl+'/facebooklogin', {accessToken: facebookData.accessToken});
+        return axios.post(Constants.manifest.extra.url+'/facebooklogin', {accessToken: facebookData.accessToken});
     };
 
     facebookData(accessToken) {
