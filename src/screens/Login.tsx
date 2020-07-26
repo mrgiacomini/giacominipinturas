@@ -17,10 +17,9 @@ export default function Login({navigation}: StackScreenProps<RootStackParamList,
       const responseFB = await Facebook.logInWithReadPermissionsAsync({
         permissions: ['public_profile'],
       });
-      if (responseFB.type === 'success') {  
-            
+      if (responseFB.type === 'success') { 
         LoginService.login({accessToken: responseFB.token})
-          .then(res => {
+          .then((res: any) => {
             LoginService.facebookData(responseFB.token).then(dataFB => {
               login({data: res.data, facebook: dataFB.data}, (user:any) => {
                 if (user) {
@@ -28,6 +27,8 @@ export default function Login({navigation}: StackScreenProps<RootStackParamList,
                 }
               });
             });         
+        }).catch((error: any) => {            
+          alert(error?.response?.data?.error);
         });
         
         

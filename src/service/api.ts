@@ -1,8 +1,7 @@
 import axios from 'axios';
-import { getToken, signout } from "../helpers/auth";
-import getEnvVars from '../../env';
-//const { apiUrl } = getEnvVars();
+import { signout } from "../helpers/auth";
 import Constants from 'expo-constants';
+import {Restart} from 'fiction-expo-restart';
 
 const api = axios.create({
   baseURL: Constants.manifest.extra.url+'/api'
@@ -14,10 +13,13 @@ api.interceptors.response.use(
 );
 
 const errorHandler = (error) => {
-  console.log(error);
-  if (typeof error === 'string' && error?.indexOf('401') > 0 || error?.response?.status === 401) 
-    signout();
-  
+  if (error?.response?.status == 401) {
+    alert('Sessão expirada.');
+    setTimeout(function() { 
+      signout();
+      Restart(); 
+    }, 10000);
+  }
   return Promise.reject(error);
 }
 
