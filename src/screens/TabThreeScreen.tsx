@@ -2,16 +2,29 @@ import * as React from 'react';
 import { StyleSheet, FlatList, RefreshControl, TouchableOpacity, View } from 'react-native';
 
 import { Text, View as ViewThemed, SafeAreaView } from '../components/Themed';
-import { Button } from 'react-native-paper';
 import Api from '../service/api';
 import { useFetchPost } from '../hooks/useFetch';
 import { mutate as mutateGlobal } from 'swr';
 import { formatDate, formatNumber, formatCnpjCpf } from '../helpers/utils';
 
 function Item({data, navigation}: {data: any, navigation: any}) {
+  function getNfse(number: any) {
+
+    var nfseByNumber = { numeroNfse: number.toString(), username: '14775228000168', password: '14775228'};
+
+    Api.post('/nfe/getByNumber', nfseByNumber)
+          .then(res => {
+              console.log(res.data);
+              if (!res.data.errors) { 
+                alert('sucesso');
+              } else
+                alert('erro' + JSON.stringify(res.data.errors));
+      });
+  }
+
   return (
     <ViewThemed style={styles.item}>
-      {/* <TouchableOpacity onPress={() => navigation.navigate('Pagamentos', {data: data})}> */}
+      <TouchableOpacity onPress={() => getNfse(data.Nfse.InfNfse.Numero)}>
       <View style={styles.row}>
         <View style={styles.column}>
           <Text style={styles.itemTitle}>NFS-e: {data.Nfse.InfNfse.Numero}</Text>       
@@ -49,7 +62,7 @@ function Item({data, navigation}: {data: any, navigation: any}) {
           <Text style={styles.itemAmountToReceive}>R$ {formatNumber(+data.totalAmount - +data.totalPayments)}</Text>
         </View>
       </View> */}
-      {/* </TouchableOpacity> */}
+      </TouchableOpacity>
      
     </ViewThemed>
   );
@@ -58,17 +71,10 @@ function Item({data, navigation}: {data: any, navigation: any}) {
 export default function TabThreeScreen() {
   const nfseFaixa = { numeroNfse: '1', username: '14775228000168', password: '14775228'};
 
-  function getNota() {
-    Api.post('/nfe/get', nfseFaixa)
-          .then(res => {
-              console.log(res.data); 
-      });
-  }
-
   const { data, error, isValidating } = useFetchPost('/nfe/get', nfseFaixa);
 
   const onRefresh = React.useCallback(() => {
-    //mutateGlobal('/nfe/get');
+    mutateGlobal('/nfe/get');
   }, []);
  
 return (
@@ -79,9 +85,9 @@ return (
 
         <FlatList
           showsVerticalScrollIndicator={false}
-          data={data.CompNfse}
+          data={data?.CompNfse}
           renderItem={({item}: {item: any}) => <Item data={item} navigation={{}}/>}
-          keyExtractor={item => item.Nfse.InfNfse.Numero}
+          keyExtractor={(item, index) => item.Nfse.InfNfse.Numero.toString()}
           refreshControl={
             <RefreshControl refreshing={isValidating} onRefresh={onRefresh} />
           }
