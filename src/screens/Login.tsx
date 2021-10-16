@@ -13,7 +13,9 @@ export default function Login({navigation}: StackScreenProps<RootStackParamList,
 
   async function handleSign() {
     try {
-      await Facebook.initializeAsync('3115359865198631');
+      const appId = '3115359865198631';
+      const appName = '';
+      await Facebook.initializeAsync({ appId, appName });
       const responseFB = await Facebook.logInWithReadPermissionsAsync({
         permissions: ['public_profile'],
       });
