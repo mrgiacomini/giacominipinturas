@@ -1,59 +1,82 @@
 import { StackScreenProps } from '@react-navigation/stack';
-import * as React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { useAuth } from "../contexts/auth";
 import { RootStackParamList } from '../../types';
-import * as Facebook from 'expo-facebook';
 import LoginService from '../service/auth';
 import logo from '../../assets/images/logo.png'; 
+import * as LocalAuthentication from 'expo-local-authentication'
 
 export default function Login({navigation}: StackScreenProps<RootStackParamList, 'Login'>) {
+  const {height, width} = Dimensions.get('window');
 
   const { login } = useAuth();
 
-  async function handleSign() {
-    try {
-      const appId = '3115359865198631';
-      const appName = '';
-      await Facebook.initializeAsync({ appId, appName });
-      const responseFB = await Facebook.logInWithReadPermissionsAsync({
-        permissions: ['public_profile'],
-      });
-      if (responseFB.type === 'success') { 
-        LoginService.login({accessToken: responseFB.token})
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleBiometricAuth = async () => {
+    const isBiometricAvailable = await LocalAuthentication.hasHardwareAsync();
+    if (!isBiometricAvailable)
+      return alert('Aparelho sem biometria disponível');
+
+    const savedBiometrics = await LocalAuthentication.isEnrolledAsync();
+    if (!savedBiometrics)
+      return alert('Nenhuma biometria salva.');
+
+    const biometricAuth = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Entrar com Biometria',
+      cancelLabel: 'Cancelar',
+      disableDeviceFallback: true,
+    }); 
+
+    if (biometricAuth.success) {
+      setLoading(true);
+      const loginData = {email: email};
+      LoginService.login(loginData)
           .then((res: any) => {
-            LoginService.facebookData(responseFB.token).then(dataFB => {
-              login({data: res.data, facebook: dataFB.data}, (user:any) => {
+              login({data: res.data}, (user:any) => {
+                setLoading(false);
                 if (user) {
                   navigation.navigate('Root');
                 }
-              });
-            });         
+              });    
         }).catch((error: any) => {            
+          setLoading(false);
           alert(error?.response?.data?.error);
         });
-        
-        
-      } else {
-        // type === 'cancel'
-      }
-    } catch ({ message }) {
-      alert(`Facebook Login Error: ${message}`);
     }
-  }
-
+  };
     
   return (
-    <View style={styles.container}>
-      <Image
-        style={{ width: '100%', height: 200, marginBottom: 20 }}
-        source={logo}
-      />
-      <Text style={styles.title}>GIACOMINI PINTURAS</Text>
-      <TouchableOpacity onPress={handleSign} style={styles.loginBtn}>
-        <Text style={{ color: "#fff" }}>ENTRAR COM O FACEBOOK</Text>
-      </TouchableOpacity>
-    </View>
+    <>
+    {loading ?
+      <View
+        style={{justifyContent: 'center', alignItems: 'center', height, width}}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+      :
+      <View style={styles.container}>
+        <Image
+          style={styles.logo}
+          source={logo}
+        />
+        <Text style={styles.title}>GIACOMINI PINTURAS</Text>
+        <TextInput        
+          placeholder={'Digite seu email'}
+          value={email}
+          onChangeText={setEmail}
+          autoCompleteType={"email"}
+          keyboardType={"email-address"}
+          style={styles.input}
+          autoCapitalize="none"          
+        />
+        <TouchableOpacity onPress={handleBiometricAuth} style={styles.loginBtn}>
+          <Text style={styles.loginBtnText}>ENTRAR</Text>
+        </TouchableOpacity>
+      </View>      
+    }
+    </>
   );
 }
 
@@ -84,4 +107,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 20
   },
+  loginBtnText: {
+    color: "#fff"
+  },
+  logo: { 
+    width: '100%', 
+    height: 200, 
+    marginBottom: 20 
+  },
+  input: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 60,
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    marginBottom: 8,
+    fontSize: 18,
+  }
 });
