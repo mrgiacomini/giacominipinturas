@@ -18,7 +18,7 @@ const errorHandler = (error) => {
     setTimeout(function() { 
       signout();
       Restart(); 
-    }, 10000);
+    }, 1000);
   }
   return Promise.reject(error);
 }

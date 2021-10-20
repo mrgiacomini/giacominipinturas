@@ -4,6 +4,8 @@ import { StyleSheet, FlatList, RefreshControl, TouchableOpacity, View } from 're
 import { Text, View as ViewThemed, SafeAreaView } from '../components/Themed';
 import { useFetchPost } from '../hooks/useFetch';
 import { formatDate, formatNumber, formatCnpjCpf } from '../helpers/utils';
+import { useAuth } from "../contexts/auth";
+import { mutate as mutateGlobal } from 'swr';
 
 function Item({data, navigation}: {data: any, navigation: any}) {
   return (
@@ -38,11 +40,15 @@ function Item({data, navigation}: {data: any, navigation: any}) {
 }
 
 export default function TabThreeScreen() {
-  const nfseFaixa = { numeroNfse: '1'};
+  const { user } = useAuth();
 
-  const { data, error, isValidating } = useFetchPost('/nfe/get', nfseFaixa);
+  const nfse = { user: user?.data?.user };
 
-  const onRefresh = React.useCallback(() => { }, []);
+  const { data, error, isValidating } = useFetchPost('nfe/get', nfse);
+
+  const onRefresh = React.useCallback(() => {
+    mutateGlobal('nfe/get');
+   }, []);
  
   return (
       <> 
@@ -54,7 +60,7 @@ export default function TabThreeScreen() {
             showsVerticalScrollIndicator={false}
             data={data?.CompNfse}
             renderItem={({item}: {item: any}) => <Item data={item} navigation={{}}/>}
-            keyExtractor={item => item.Nfse.InfNfse.Numero}
+            keyExtractor={item => item.Nfse.InfNfse.Numero.toString()}
             refreshControl={
               <RefreshControl refreshing={isValidating} onRefresh={onRefresh} />
             }

@@ -1,4 +1,4 @@
-import { AsyncStorage } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from "../service/api";
 
 export const authenticate = async (response: any, next: any) => {
